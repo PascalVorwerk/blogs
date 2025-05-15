@@ -6,7 +6,7 @@
 public static class WeatherData
 {
     private static List<WeatherForecast> _weatherForecasts = new();
-    private static string[] _summaries =
+    private static readonly string[] Summaries =
     [
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     ];
@@ -19,11 +19,10 @@ public static class WeatherData
                 (
                     DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                     Random.Shared.Next(-20, 55),
-                    _summaries[Random.Shared.Next(_summaries.Length)]
+                    Summaries[Random.Shared.Next(Summaries.Length)]
                 ))
             .ToList();
     }
-    
     
     public static List<WeatherForecast> GetWeatherForecasts()
     {

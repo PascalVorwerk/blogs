@@ -1,3 +1,4 @@
+using ValidationDotNet;
 using ValidationDotNet.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,13 +16,16 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "ValidationDotNet v1");
+        options.SwaggerEndpoint("/openapi/v1.json", "v1");
     });
 }
 
 app.UseHttpsRedirection();
 
 app.MapWeatherEndpoints();
+
+// Initialize some weather data
+WeatherData.Initialize();
 
 await app.RunAsync();
 

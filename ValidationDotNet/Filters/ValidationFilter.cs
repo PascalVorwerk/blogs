@@ -18,13 +18,6 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
         
         // This call validates all properties of the object, or only the required ones if 'ValidateAllProperties' is set to false
         Validator.TryValidateObject(argument, validationContext, validationResults, true);
-        
-        // We haven't checked if the custom rules are valid yet, so we need to do that as well
-        if (argument is IValidatableObject validatableObject)
-        {
-            var customValidationResults = validatableObject.Validate(validationContext);
-            validationResults.AddRange(customValidationResults);
-        }
 
         // If there are no validation results, we can continue in the pipeline
         if (validationResults.Count == 0) return await next(context);
