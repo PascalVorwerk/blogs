@@ -12,7 +12,7 @@ public class CreateWeatherForecastRequest : IValidatableObject
     
     [Required]
     [Range(-20, 55)]
-    public int TemperatureC { get; set; }
+    public int TemperatureC { get; set; }   
     
     [Required]
     [StringLength(50)]
