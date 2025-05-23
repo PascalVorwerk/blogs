@@ -6,6 +6,6 @@ public interface IUserService
 {
     Task<List<GetUserResponse>> GetUsersAsync();
     Task<GetUserResponse> GetUserAsync(Guid id);
-    Task<GetUserResponse?> GetUserByEmailAsync(string email);
+    GetUserResponse? GetUserByEmail(string email);
     Task<Guid> CreateUserAsync(CreateUserRequest request);
 }

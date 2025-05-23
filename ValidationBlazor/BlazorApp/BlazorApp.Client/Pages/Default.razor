@@ -1,0 +1,101 @@
+﻿@page "/"
+@using System.Net
+@using Business.Dtos
+@inject HttpClient HttpClient
+
+<div style="display: flex; align-items: center; flex-direction: column; width: 100%">
+    <h3 class="text-xl font-bold mb-4">Create User</h3>
+
+    <div style="width: 500px;">
+        <EditForm EditContext="@_editContext" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label>Email:</label>
+                <InputText @bind-Value="_user.Email" class="form-control" />
+                <ValidationMessage For="@(() => _user.Email)" />
+            </div>
+
+            <div class="mb-3">
+                <label>Name:</label>
+                <InputText @bind-Value="_user.Name" class="form-control" />
+                <ValidationMessage For="@(() => _user.Name)" />
+            </div>
+
+            <div class="mb-3">
+                <label>Surname:</label>
+                <InputText @bind-Value="_user.Surname" class="form-control" />
+                <ValidationMessage For="@(() => _user.Surname)" />
+            </div>
+
+            <div class="mb-3">
+                <label>Age:</label>
+                <InputNumber @bind-Value="_user.Age" class="form-control" />
+                <ValidationMessage For="@(() => _user.Age)" />
+            </div>
+
+            <button class="btn btn-primary" type="submit" disabled="@(_editContext?.GetValidationMessages().Any())">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly CreateUserRequest _user = new();
+    private EditContext? _editContext;
+    private ValidationMessageStore? _messageStore;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_user);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Clear previous messages
+        _messageStore?.Clear();
+        _editContext?.NotifyValidationStateChanged();
+
+        var response = await HttpClient.PostAsJsonAsync("api/users", _user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<Guid>();
+            Console.WriteLine($"User created with ID: {result}");
+            return;
+        }
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+
+            // Minimal inline deserialization to avoid referencing ASP.NET Core types
+            var problemDetails = System.Text.Json.JsonSerializer.Deserialize<ClientValidationProblemDetails>(content,
+                new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (problemDetails?.Errors is not null)
+            {
+                foreach (var (field, messages) in problemDetails.Errors)
+                {
+                    var fieldIdentifier = new FieldIdentifier(_user, field);
+
+                    foreach (var message in messages)
+                    {
+                        _messageStore?.Add(fieldIdentifier, message);
+                    }
+                }
+
+                _editContext?.NotifyValidationStateChanged();
+            }
+
+            return;
+        }
+
+        // Handle other errors
+        var errorContent = await response.Content.ReadAsStringAsync();
+        Console.Error.WriteLine($"Unexpected error: {(int)response.StatusCode} - {errorContent}");
+    }
+}

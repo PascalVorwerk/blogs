@@ -26,11 +26,12 @@ public class CreateUserRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        // How do we make sure the email is unique?
-        var userService = validationContext.GetRequiredService<IUserService>();
-
-        var emailExists = userService.GetUserByEmailAsync(Email).Result;
-
+        // The userService is resolved on the server side, from the Service provider.
+        var userService = validationContext.GetService<IUserService>();
+        
+        // Check if the email already exists
+        var emailExists = userService?.GetUserByEmail(Email);
+        
         if (emailExists != null)
         {
             yield return new ValidationResult("Email already exists", [nameof(Email)]);

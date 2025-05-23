@@ -1,0 +1,130 @@
+﻿@page "/custom"
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@using Business.Dtos
+@inject HttpClient HttpClient
+
+
+<div style="display: flex; align-items: center; flex-direction: column; width: 100%">
+    <h3 class="text-xl font-bold mb-4">Create User</h3>
+
+    <div style="width: 500px;">
+        <EditForm EditContext="@_editContext" OnValidSubmit="HandleValidSubmit">
+            <div class="mb-3">
+                <label>Email:</label>
+                <InputText @bind-Value="_user.Email" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Email)"/>
+            </div>
+
+            <div class="mb-3">
+                <label>Name:</label>
+                <InputText @bind-Value="_user.Name" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Name)"/>
+            </div>
+
+            <div class="mb-3">
+                <label>Surname:</label>
+                <InputText @bind-Value="_user.Surname" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Surname)"/>
+            </div>
+
+            <div class="mb-3">
+                <label>Age:</label>
+                <InputNumber @bind-Value="_user.Age" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Age)"/>
+            </div>
+
+            <button class="btn btn-primary" type="submit" disabled="@(!_isFormValid)">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
+@code{
+    private readonly CreateUserRequest _user = new();
+    private EditContext? _editContext;
+    private ValidationMessageStore? _messageStore;
+    private bool _isFormValid;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_user);
+        _messageStore = new ValidationMessageStore(_editContext);
+
+        _editContext.OnFieldChanged += HandleFieldChanged;
+
+        // Initially validate everything (optional)
+        _isFormValid = _editContext.Validate();
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        if (_editContext == null || _messageStore == null) return;
+
+        // Clear existing messages for the changed field
+        _messageStore.Clear(e.FieldIdentifier);
+
+        // Validate the single field
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(_user)
+        {
+            MemberName = e.FieldIdentifier.FieldName
+        };
+
+        var property = typeof(CreateUserRequest).GetProperty(e.FieldIdentifier.FieldName);
+        var value = property?.GetValue(_user);
+
+        Validator.TryValidateProperty(value, context, results);
+
+        foreach (var result in results)
+        {
+            _messageStore.Add(e.FieldIdentifier, result.ErrorMessage ?? "No error message provided.");
+        }
+
+        _editContext.NotifyValidationStateChanged();
+
+        // Re-check entire form validity if needed
+        _isFormValid = !_editContext.GetValidationMessages().Any();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var response = await HttpClient.PostAsJsonAsync("api/users", _user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<Guid>();
+            Console.WriteLine($"User created with ID: {result}");
+            return;
+        }
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var problemDetails = await response.Content.ReadFromJsonAsync<ClientValidationProblemDetails>();
+            if (problemDetails is not null && _editContext is not null && _messageStore is not null)
+            {
+                _messageStore.Clear();
+
+                foreach (var (field, errors) in problemDetails.Errors)
+                {
+                    var fieldIdentifier = new FieldIdentifier(_user, field);
+
+                    foreach (var error in errors)
+                    {
+                        _messageStore.Add(fieldIdentifier, error);
+                    }
+                }
+
+                _editContext.NotifyValidationStateChanged();
+
+                // Update form validity
+                _isFormValid = false;
+            }
+
+            return;
+        }
+
+        // Log other unexpected errors
+        var content = await response.Content.ReadAsStringAsync();
+        Console.Error.WriteLine($"Unexpected error ({(int)response.StatusCode}): {content}");
+    }
+}

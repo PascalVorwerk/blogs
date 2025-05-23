@@ -13,7 +13,7 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
             return Results.BadRequest("Invalid request payload");
         }
         
-        var validationContext = new ValidationContext(argument);
+        var validationContext = new ValidationContext(argument, serviceProvider: context.HttpContext.RequestServices, items: null);
         var validationResults = new List<ValidationResult>();
         
         // This call validates all properties of the object, or only the required ones if 'ValidateAllProperties' is set to false

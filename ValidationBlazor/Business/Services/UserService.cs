@@ -27,11 +27,11 @@ public class UserService : IUserService
         return Task.FromResult(userResponse);
     }
 
-    public Task<GetUserResponse?> GetUserByEmailAsync(string email)
+    public GetUserResponse? GetUserByEmail(string email)
     {
         var user = UsersDatabase.GetUsers().FirstOrDefault(x => x.Email == email);
         
-        return Task.FromResult(user != null ? new GetUserResponse(user.Id, user.Email, user.Name, user.Surname, user.Age) : null);
+        return user != null ? new GetUserResponse(user.Id, user.Email, user.Name, user.Surname, user.Age) : null;
     }
 
     public Task<Guid> CreateUserAsync(CreateUserRequest request)
