@@ -34,7 +34,9 @@ public class CreateUserRequest : IValidatableObject
         
         if (emailExists != null)
         {
-            yield return new ValidationResult("Email already exists", [nameof(Email)]);
+            yield return new ValidationResult("Email already exists", [ nameof(Email) ]);
         }
+
+        yield return new ValidationResult("Always return this validation message", [string.Empty]);
     }
 }

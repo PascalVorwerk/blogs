@@ -8,30 +8,31 @@
 
     <div style="width: 500px;">
         <EditForm EditContext="@_editContext" OnValidSubmit="HandleValidSubmit">
-            <DataAnnotationsValidator />
+            <ValidationSummary Model="_user"/>
+            <DataAnnotationsValidator/>
 
             <div class="mb-3">
                 <label>Email:</label>
-                <InputText @bind-Value="_user.Email" class="form-control" />
-                <ValidationMessage For="@(() => _user.Email)" />
+                <InputText @bind-Value="_user.Email" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Email)"/>
             </div>
 
             <div class="mb-3">
                 <label>Name:</label>
-                <InputText @bind-Value="_user.Name" class="form-control" />
-                <ValidationMessage For="@(() => _user.Name)" />
+                <InputText @bind-Value="_user.Name" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Name)"/>
             </div>
 
             <div class="mb-3">
                 <label>Surname:</label>
-                <InputText @bind-Value="_user.Surname" class="form-control" />
-                <ValidationMessage For="@(() => _user.Surname)" />
+                <InputText @bind-Value="_user.Surname" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Surname)"/>
             </div>
 
             <div class="mb-3">
                 <label>Age:</label>
-                <InputNumber @bind-Value="_user.Age" class="form-control" />
-                <ValidationMessage For="@(() => _user.Age)" />
+                <InputNumber @bind-Value="_user.Age" class="form-control"/>
+                <ValidationMessage For="@(() => _user.Age)"/>
             </div>
 
             <button class="btn btn-primary" type="submit" disabled="@(_editContext?.GetValidationMessages().Any())">Submit</button>

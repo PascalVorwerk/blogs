@@ -10,6 +10,7 @@
 
     <div style="width: 500px;">
         <EditForm EditContext="@_editContext" OnValidSubmit="HandleValidSubmit">
+            <ValidationSummary Model="@_user"/>
             <div class="mb-3">
                 <label>Email:</label>
                 <InputText @bind-Value="_user.Email" class="form-control"/>
